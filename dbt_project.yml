@@ -45,8 +45,10 @@ vars:
       - name:           "$value"
         alias:          "value"
         transform_sql:  "cast(value as numeric)"
+      - name:           "OrderCurrencyCode"
+        transform_sql:  "cast(OrderCurrencyCode as string)"
+
     klaviyo__person_pass_through_columns: []
-    
 models:
   klaviyo:
     intermediate:
