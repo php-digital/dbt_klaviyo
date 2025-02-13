@@ -64,6 +64,7 @@ create_sessions as (
         touch_id,
         touch_type,
         event_month,
+        _fivetran_synced,
         sum(case when touch_id is not null
         {% if var('klaviyo__eligible_attribution_events') != [] %}
             and lower(type) in {{ "('" ~ (var('klaviyo__eligible_attribution_events') | join("', '")) ~ "')" }}
