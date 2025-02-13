@@ -45,7 +45,7 @@ vars:
       - name:           "custom_property_fields"
         transform_sql:  "CAST(SAFE.PARSE_JSON(custom_property_fields) as JSON)"
       - name:           "value"
-        alias:          "numeric_value"
+        alias:          "event_value"
         transform_sql:  "CAST(JSON_VALUE(custom_property_fields, '$.\"$value\"') as NUMERIC)"        
     klaviyo__person_pass_through_columns: []
 models:
