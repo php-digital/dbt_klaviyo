@@ -21,6 +21,7 @@ with events as (
         type,
         campaign_id,
         flow_id,
+        flow_message_id,
         _fivetran_synced,
         coalesce(campaign_id, flow_id) as touch_id,
         case 
@@ -51,6 +52,7 @@ create_sessions as (
         type,
         campaign_id,
         flow_id,
+        flow_message_id,
         touch_id,
         touch_type,
         event_month,
@@ -100,6 +102,7 @@ final as (
         type,
         campaign_id,
         flow_id,
+        flow_message_id,
         touch_id,
         touch_type,
         event_month,
