@@ -21,7 +21,7 @@ with events as (
             when flow_id is not null then 'flow' 
         else null end as touch_type,
         -- Add month partition to reduce granularity
-        date_trunc('month', occurred_at) as event_month
+        timestamp_trunc(occurred_at, MONTH) as event_month
 
     from {{ var('event_table') }}
 
