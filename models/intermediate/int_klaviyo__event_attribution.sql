@@ -102,7 +102,7 @@ final as (
         variation_id,
         unique_event_id,
         event_id,
-        metric_id
+        metric_id,
         person_id,
         occurred_at,
         type,
