@@ -14,6 +14,7 @@
 
 with events as (
     select 
+        variation_id,
         event_id as unique_event_id,
         person_id,
         occurred_at,
@@ -43,6 +44,7 @@ with events as (
 
 create_sessions as (
     select
+        variation_id,
         unique_event_id,
         person_id,
         occurred_at,
@@ -91,6 +93,7 @@ attribution as (
 
 final as (
     select
+        variation_id,
         unique_event_id,
         person_id,
         occurred_at,
