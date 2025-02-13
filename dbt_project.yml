@@ -42,11 +42,8 @@ vars:
 
   klaviyo_source:
     klaviyo__event_pass_through_columns: 
-      - name:           "$value"
-        alias:          "value"
-        transform_sql:  "CAST(JSON_VALUE(SAFE.PARSE_JSON(custom_property_fields), '$.\"$value\"') as NUMERIC)"
-      - name:           "OrderCurrencyCode"
-        transform_sql:  "cast(JSON_VALUE(custom_property_fields, 'OrderCurrencyCode') AS NUMERIC)"
+      - name:           "custom_property_fields"
+        transform_sql:  "CAST(SAFE.PARSE_JSON(custom_property_fields) as JSON)"
     klaviyo__person_pass_through_columns: []
 models:
   klaviyo:
