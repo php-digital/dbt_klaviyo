@@ -41,8 +41,12 @@ vars:
     - 'cancelled order'
 
   klaviyo_source:
-    klaviyo__event_pass_through_columns: []
+    klaviyo__event_pass_through_columns: 
+      - name:           "$value"
+        alias:          "value"
+        transform_sql:  "cast(value as numeric)"
     klaviyo__person_pass_through_columns: []
+    
 models:
   klaviyo:
     intermediate:
