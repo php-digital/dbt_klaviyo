@@ -7,20 +7,25 @@
         partition_by={
             "field": "occurred_at",
             "data_type": "timestamp",
-            "granularity": "month" 
-        } 
+            "granularity": "month"
+        }
     )
-}} -- Changed to monthly partitioning
+}}
 
 with events as (
     select 
-        *,
+        event_id as unique_event_id,
+        person_id,
+        occurred_at,
+        type,
+        campaign_id,
+        flow_id,
+        _fivetran_synced,
         coalesce(campaign_id, flow_id) as touch_id,
         case 
             when campaign_id is not null then 'campaign' 
             when flow_id is not null then 'flow' 
         else null end as touch_type,
-        -- Add month partition to reduce granularity
         timestamp_trunc(occurred_at, MONTH) as event_month
 
     from {{ var('event_table') }}
@@ -38,8 +43,15 @@ with events as (
 
 create_sessions as (
     select
-        *,
-        -- Simplified session creation logic
+        unique_event_id,
+        person_id,
+        occurred_at,
+        type,
+        campaign_id,
+        flow_id,
+        touch_id,
+        touch_type,
+        event_month,
         sum(case when touch_id is not null
         {% if var('klaviyo__eligible_attribution_events') != [] %}
             and lower(type) in {{ "('" ~ (var('klaviyo__eligible_attribution_events') | join("', '")) ~ "')" }}
@@ -51,7 +63,6 @@ create_sessions as (
     from events
 ),
 
--- Combine last_touches and attribute steps to reduce window function operations
 attribution as (
     select 
         cs.*,
@@ -61,7 +72,6 @@ attribution as (
             partition by person_id, event_month, touch_session 
             order by occurred_at asc 
             rows between unbounded preceding and current row) as session_event_type,
-        -- Combine attribution logic here
         coalesce(
             touch_id,
             first_value(case when touch_id is not null then touch_id else null end) over(
@@ -81,12 +91,10 @@ attribution as (
 
 final as (
     select
-        -- Select only needed columns to reduce data movement
         unique_event_id,
         person_id,
         occurred_at,
         type,
-        source_relation,
         campaign_id,
         flow_id,
         touch_id,
@@ -97,7 +105,6 @@ final as (
         session_event_type,
         last_touch_id,
         session_touch_type,
-        -- Add a simple attribution filter
         case when {{ dbt.datediff('session_start_at', 'occurred_at', 'hour') }} <= 
             case when lower(session_event_type) like '%sms%' 
                 then {{ var('klaviyo__sms_attribution_lookback') }}
