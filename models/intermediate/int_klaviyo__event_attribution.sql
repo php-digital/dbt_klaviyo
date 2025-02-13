@@ -4,11 +4,7 @@
         unique_key='unique_event_id',
         incremental_strategy = 'merge' if target.type not in ('postgres', 'redshift') else 'delete+insert',
         file_format = 'delta',
-        partition_by={
-            "field": "occurred_at",
-            "data_type": "timestamp",
-            "granularity": "quarter"
-        }
+        cluster_by=['occurred_at']
     )
 }}
 
