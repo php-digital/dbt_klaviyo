@@ -7,8 +7,8 @@
         partition_by={
             "field": "occurred_at",
             "data_type": "timestamp",
-            "granularity": "month"  -- Changed to monthly partitioning
-        }
+            "granularity": "month" 
+        } -- Changed to monthly partitioning
     )
 }}
 
