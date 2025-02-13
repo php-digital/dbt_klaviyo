@@ -123,6 +123,7 @@ final as (
         session_event_type,
         last_touch_id,
         session_touch_type,
+        _fivetran_synced,
         case when {{ dbt.datediff('session_start_at', 'occurred_at', 'hour') }} <= 
             case when lower(session_event_type) like '%sms%' 
                 then {{ var('klaviyo__sms_attribution_lookback') }}
