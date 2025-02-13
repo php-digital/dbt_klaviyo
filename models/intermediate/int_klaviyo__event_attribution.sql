@@ -7,7 +7,7 @@
         partition_by={
             "field": "occurred_at",
             "data_type": "timestamp",
-            "granularity": "month"
+            "granularity": "quarter"
         }
     )
 }}
@@ -34,7 +34,10 @@ with events as (
             when campaign_id is not null then 'campaign' 
             when flow_id is not null then 'flow' 
         else null end as touch_type,
-        timestamp_trunc(occurred_at, MONTH) as event_month
+        timestamp_trunc(occurred_at, QUARTER) as event_quarter,  -- Changed to quarter
+        -- Create a hash of person_id and quarter to reduce cardinality
+        farm_fingerprint(concat(cast(person_id as string), 
+                              cast(timestamp_trunc(occurred_at, QUARTER) as string))) as person_quarter_hash
 
     from {{ var('event_table') }}
 
@@ -67,14 +70,15 @@ create_sessions as (
         flow_message_id,
         touch_id,
         touch_type,
-        event_month,
+        event_quarter,
         _fivetran_synced,
+        person_quarter_hash,
         sum(case when touch_id is not null
         {% if var('klaviyo__eligible_attribution_events') != [] %}
             and lower(type) in {{ "('" ~ (var('klaviyo__eligible_attribution_events') | join("', '")) ~ "')" }}
         {% endif %}
             then 1 else 0 end) over (
-                partition by person_id, event_month 
+                partition by person_quarter_hash  -- Use hash instead of raw values
                 order by occurred_at asc 
                 rows between unbounded preceding and current row) as touch_session 
     from events
@@ -84,22 +88,22 @@ attribution as (
     select 
         cs.*,
         min(occurred_at) over(
-            partition by person_id, event_month, touch_session) as session_start_at,
+            partition by person_quarter_hash, touch_session) as session_start_at,
         first_value(type) over(
-            partition by person_id, event_month, touch_session 
+            partition by person_quarter_hash, touch_session 
             order by occurred_at asc 
             rows between unbounded preceding and current row) as session_event_type,
         coalesce(
             touch_id,
             first_value(case when touch_id is not null then touch_id else null end) over(
-                partition by person_id, event_month, touch_session 
+                partition by person_quarter_hash, touch_session 
                 order by occurred_at asc 
                 rows between unbounded preceding and current row)
         ) as last_touch_id,
         coalesce(
             touch_type,
             first_value(case when touch_type is not null then touch_type else null end) over(
-                partition by person_id, event_month, touch_session 
+                partition by person_quarter_hash, touch_session 
                 order by occurred_at asc 
                 rows between unbounded preceding and current row)
         ) as session_touch_type
@@ -124,7 +128,7 @@ final as (
         flow_message_id,
         touch_id,
         touch_type,
-        event_month,
+        event_quarter,
         touch_session,
         session_start_at,
         session_event_type,
