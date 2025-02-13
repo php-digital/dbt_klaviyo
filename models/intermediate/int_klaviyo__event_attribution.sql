@@ -15,8 +15,10 @@
 with events as (
     select 
         variation_id,
-        event_id as unique_event_id,
+        event_id,
+        unique_event_id,
         person_id,
+        metric_id,
         occurred_at,
         type,
         campaign_id,
@@ -47,7 +49,9 @@ create_sessions as (
     select
         variation_id,
         unique_event_id,
+        event_id,
         person_id,
+        metric_id,
         occurred_at,
         type,
         campaign_id,
@@ -97,6 +101,8 @@ final as (
     select
         variation_id,
         unique_event_id,
+        event_id,
+        metric_id
         person_id,
         occurred_at,
         type,
